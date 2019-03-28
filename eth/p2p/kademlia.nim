@@ -424,14 +424,14 @@ proc bootstrap*(k: KademliaProtocol, bootstrapNodes: seq[Node]) {.async.} =
   discard await k.lookupRandom()
 
 proc recvPong*(k: KademliaProtocol, n: Node, token: seq[byte]) =
-  trace "<<< pong from ", n
+  trace "Pong received", n
   let pingid = token & @(n.node.pubkey.data)
   var future: Future[bool]
   if k.pongFutures.take(pingid, future):
     future.complete(true)
 
 proc recvPing*(k: KademliaProtocol, n: Node, msgHash: any) =
-  trace "<<< ping from ", n
+  debug "Ping received", n
   k.updateRoutingTable(n)
   k.wire.sendPong(n, msgHash)
 
