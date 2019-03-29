@@ -72,9 +72,9 @@ proc distanceTo(n: Node, id: NodeId): UInt256 = n.id xor id
 
 proc `$`*(n: Node): string =
   if n == nil:
-    "Node[local]"
+    "enode://nil"
   else:
-    "Node[" & $n.node.address.ip & ":" & $n.node.address.udpPort & "]"
+    $n.node
 
 proc hash*(n: Node): hashes.Hash = hash(n.node.pubkey.data)
 proc `==`*(a, b: Node): bool = (a.isNil and b.isNil) or (not a.isNil and not b.isNil and a.node.pubkey == b.node.pubkey)
