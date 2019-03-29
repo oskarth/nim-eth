@@ -1,6 +1,6 @@
 import
   deques, tables,
-  eth/[rlp, keys], chronos, eth/common/eth_types,
+  chronicles, eth/[rlp, keys], chronos, eth/common/eth_types,
   ../enode, ../kademlia, ../discovery, ../options, ../rlpxcrypt
 
 const
@@ -174,4 +174,6 @@ type
     id*: int
 
   Response*[MsgType] = distinct Peer
+
+chronicles.formatIt(Peer): $(it.remote)
 

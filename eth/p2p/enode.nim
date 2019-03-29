@@ -9,7 +9,7 @@
 #
 
 import uri, strutils, net
-import eth/keys
+import chronicles, eth/keys
 
 type
   ENodeStatus* = enum
@@ -160,3 +160,5 @@ proc `$`*(n: ENode): string =
     result.add("?")
     result.add("discport=")
     result.add($int(n.address.udpPort))
+
+chronicles.formatIt(ENode): $it

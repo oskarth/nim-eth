@@ -35,8 +35,6 @@ var
 template allProtocols*: auto = {.gcsafe.}: gProtocols
 template devp2pInfo: auto = {.gcsafe.}: gDevp2pInfo
 
-chronicles.formatIt(Peer): $(it.remote)
-
 proc disconnect*(peer: Peer, reason: DisconnectionReason, notifyOtherPeer = false) {.gcsafe, async.}
 
 template raisePeerDisconnected(msg: string, r: DisconnectionReason) =

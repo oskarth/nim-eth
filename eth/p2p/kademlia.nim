@@ -46,7 +46,7 @@ type
 const
   BUCKET_SIZE = 16
   BITS_PER_HOP = 8
-  REQUEST_TIMEOUT = 900                 # timeout of message round trips
+  REQUEST_TIMEOUT = 5000                # timeout of message round trips
   FIND_CONCURRENCY = 3                  # parallel find node lookups
   ID_SIZE = 256
 
@@ -78,6 +78,8 @@ proc `$`*(n: Node): string =
 
 proc hash*(n: Node): hashes.Hash = hash(n.node.pubkey.data)
 proc `==`*(a, b: Node): bool = (a.isNil and b.isNil) or (not a.isNil and not b.isNil and a.node.pubkey == b.node.pubkey)
+
+chronicles.formatIt(Node): $it
 
 proc newKBucket(istart, iend: NodeId): KBucket =
   result.new()
@@ -424,14 +426,14 @@ proc bootstrap*(k: KademliaProtocol, bootstrapNodes: seq[Node]) {.async.} =
   discard await k.lookupRandom()
 
 proc recvPong*(k: KademliaProtocol, n: Node, token: seq[byte]) =
-  trace "<<< pong from ", n
+  debug "Received pong", n
   let pingid = token & @(n.node.pubkey.data)
   var future: Future[bool]
   if k.pongFutures.take(pingid, future):
     future.complete(true)
 
 proc recvPing*(k: KademliaProtocol, n: Node, msgHash: any) =
-  trace "<<< ping from ", n
+  debug "Received ping", n
   k.updateRoutingTable(n)
   k.wire.sendPong(n, msgHash)
 
@@ -446,7 +448,7 @@ proc recvNeighbours*(k: KademliaProtocol, remote: Node, neighbours: seq[Node]) =
   ## done as part of node lookup, so the actual processing is left to the callback from
   ## neighbours_callbacks, which is added (and removed after it's done or timed out) in
   ## wait_neighbours().
-  trace "Received neighbours", remote, neighbours
+  debug "Received neighbours", remote, neighbours = $neighbours
   let cb = k.neighboursCallbacks.getOrDefault(remote)
   if not cb.isNil:
     cb(neighbours)
