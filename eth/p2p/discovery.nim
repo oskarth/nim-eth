@@ -221,6 +221,7 @@ proc expirationValid(rlpEncodedPayload: seq[byte]): bool {.inline.} =
 
 proc receive(d: DiscoveryProtocol, a: Address, msg: Bytes) =
   var msgHash: MDigest[256]
+  debug "Received msg", a
   if validateMsgHash(msg, msgHash):
     var remotePubkey: PublicKey
     if recoverMsgPublicKey(msg, remotePubkey):
@@ -231,6 +232,7 @@ proc receive(d: DiscoveryProtocol, a: Address, msg: Bytes) =
         let node = newNode(remotePubkey, a)
         case cmdId
         of cmdPing:
+          debug "Received ping", a
           d.recvPing(node, msgHash)
         of cmdPong:
           d.recvPong(node, payload)
@@ -239,7 +241,7 @@ proc receive(d: DiscoveryProtocol, a: Address, msg: Bytes) =
         of cmdFindNode:
           d.recvFindNode(node, payload)
       else:
-        trace "Received msg already expired", cmdId, a
+        debug "Received msg already expired", cmdId, a
     else:
       error "Wrong public key from ", a
   else:
