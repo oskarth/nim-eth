@@ -87,6 +87,16 @@ proc runTrieTests() =
 task test_trie, "run trie tests":
   runTrieTests()
 
+proc runPssTests() =
+  for filename in [
+    "test_shh",
+    "test_shh_connect"
+    ]:
+    runTest("tests/p2p/" & filename)
+
+task test_pss, "run pss and related tests":
+  runPssTests()
+
 task test, "run tests":
   for filename in [
       "test_bloom",
