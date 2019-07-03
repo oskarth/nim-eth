@@ -4,9 +4,19 @@ import
   hashes, byteutils, nimcrypto/[bcmode, hash, keccak, rijndael, sysrand],
   eth/p2p, whisper_protocol as whisper
 
-# Piggybacking on Whisper payload for now
-type Payload* = whisper.Payload
-type DecodedPayload* = whisper.DecodedPayload
+type
+  # Piggybacking on Whisper payload for now
+  Payload* = whisper.Payload
+  DecodedPayload* = whisper.DecodedPayload
+
+  # In the Go code base of PSS, the Payload field in PssMsg is a whisper.Envelope
+  Envelope* = whisper.Envelope
+
+  PssMsg* = object
+    to*: Bytes
+    control*: Bytes
+    expire*: uint32
+    payload*: Envelope
 
 # Piggybacking on Whisper encode payload method for now
 proc encode*(payload: Payload): Option[Bytes] =
