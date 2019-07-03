@@ -87,10 +87,19 @@ proc runTrieTests() =
 task test_trie, "run trie tests":
   runTrieTests()
 
-proc runPssTests() =
+proc runWhisperTests() =
   for filename in [
     "test_shh",
     "test_shh_connect"
+  ]:
+    runTest("tests/p2p/" & filename)
+
+task test_whisper, "run whisper and related tests":
+  runWhisperTests()
+
+proc runPssTests() =
+  for filename in [
+     "test_pss"
     ]:
     runTest("tests/p2p/" & filename)
 
