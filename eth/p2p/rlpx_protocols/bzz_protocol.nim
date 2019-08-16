@@ -1,19 +1,18 @@
 import
-  eth/p2p, chronos, chronicles
+  eth/p2p, chronos, chronicles, eth/rlp, chronos/timer
 
 const
   bzzVersion = 42
 
-type
-   BzzPeer = ref object
-     initialized: bool
-   
-   BzzNetwork = ref object
-     foo: string 
+p2pProtocol Bzz(version = bzzVersion):
 
-p2pProtocol Bzz(version = bzzVersion,
-  rlpxName = "bzz",
-  peerState = BzzPeer,
-  networkState = BzzNetwork):
+  proc hellooo(peer: Peer,
+    foo: string) =
+     echo foo
+    
   onPeerConnected do (peer: Peer):
-    trace "onPeerConnected Whisper"
+    warn "conn"
+    if peer.supports(Bzz):
+      warn "bzz"
+      waitFor peer.hellooo("bar")
+      waitFor sleepAsync(1000)
