@@ -1,3 +1,4 @@
+# to be run with /tests/go/simplenode.go
 import
   unittest, chronos, tables,
   eth/[keys, p2p], eth/p2p/[enode, peer_pool, discovery],

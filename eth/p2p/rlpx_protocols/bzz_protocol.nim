@@ -3,6 +3,7 @@ import
 
 const
   bzzVersion = 11
+  hiveVersion = 10
 
 type
   Handshake = object
@@ -11,11 +12,22 @@ type
     ad: seq[seq[byte]]
     lightnode: bool
 
+p2pProtocol Hive(version = hiveVersion,
+  rlpxName = "hive"):
+
+  proc peersMsg(peer: Peer)
+  proc subPeersMsg(peer:Peer)
+
+  onPeerConnected do (peer: Peer):
+    warn "conn hive"
+    waitFor sleepAsync(60000)
+
 p2pProtocol Bzz(version = bzzVersion,
-                rlpxName = "bzz"):
+  rlpxName = "bzz"):
  
   proc hs(peer: Peer,
     Payload: Handshake) =
+      echo "foo"
       echo Payload.version 
       echo Payload.ad
 
@@ -45,8 +57,9 @@ p2pProtocol Bzz(version = bzzVersion,
     hsp.version = 11
     hsp.networkid = 4
     hsp.ad = ad 
-    hsp.lightnode = true
+    hsp.lightnode = false
+    waitFor sleepAsync(1000)
+    #discard await peer.nextMsg(Bzz.hs)
     waitFor peer.hs(hsp)
-    discard await peer.nextMsg(Bzz.hs)
     waitFor sleepAsync(60000)
 
