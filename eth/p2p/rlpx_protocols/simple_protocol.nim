@@ -4,14 +4,19 @@ import
 const
   simpleVersion = 1
 
+type
+  SimpleContent = object
+    Version: uint
+
 p2pProtocol Bzz(version = simpleVersion,
                 rlpxName = "smp"):
  
   onPeerConnected do (peer: Peer):
     warn "conn"
-        
-    waitFor peer.simpleMsg(42)
+    
+    var content: SimpleContent 
+    content.Version = 42
+    waitFor peer.SimpleMessage(content)
     waitFor sleepAsync(1000)
-
-  proc simpleMsg(peer: Peer,
-    version: uint)
+  proc SimpleMessage(peer: Peer,
+    payload: SimpleContent)
