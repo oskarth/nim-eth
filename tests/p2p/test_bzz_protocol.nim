@@ -1,5 +1,5 @@
 import
-  sequtils, options, unittest, tables, chronos, eth/[keys, p2p], chronos, 
+  sequtils, options, unittest, tables, chronos, eth/[keys, p2p], 
   eth/p2p/rlpx_protocols/whisper_protocol, eth/p2p/[enode, peer_pool], eth/p2p/rlpx_protocols/bzz_protocol, ./p2p_test_helper
 
 var nextPort = 30303
