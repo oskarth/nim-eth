@@ -2,15 +2,21 @@ import
   eth/p2p, chronos, chronicles, eth/rlp, chronos/timer
 
 const
-  bzzVersion = 11
+  bzzVersion = 12
   hiveVersion = 10
+  networkId = 4
 
-type
+type 
+  Capabilities = object
+    Caps: seq[Capability]
+  Capability = object
+    ID: uint
+    Cap: seq[bool]
   Handshake = object
     version: uint
     networkid: uint
     ad: seq[seq[byte]]
-    lightnode: bool
+    capabilities: Capabilities
 
 p2pProtocol Hive(version = hiveVersion,
   rlpxName = "hive"):
@@ -22,7 +28,7 @@ p2pProtocol Hive(version = hiveVersion,
     warn "conn hive"
     waitFor sleepAsync(60000)
 
-p2pProtocol Bzz(version = bzzVersion,
+p2pProtocol Bzz(version = 12, #bzzVersion,
   rlpxName = "bzz"):
  
   proc hs(peer: Peer,
@@ -35,15 +41,22 @@ p2pProtocol Bzz(version = bzzVersion,
     warn "conn"
     var
       oad = newSeq[byte](32)
-      en: string = "enode://040123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef@127.0.0.1:30399" #newSeq[byte](32) 
+      en: string = "enode://0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef@127.0.0.1:30399" #newSeq[byte](32) 
       uad = newSeq[byte](len(en))
       ad = newSeq[seq[byte]](2)
-      #cps = newSeq[seq[byte]](1) #array[0..0, array[0..1, byte]]
-      #cp = newSeq[byte](2)
-      # cp: array[0..1, byte] # light node legacy preset capability 
-    #cp[0] = byte(0) # zeroed by default?
-    #cp[1] = byte(3)
-    #cps[0] = cp
+      cps: Capabilities
+      cp: Capability
+
+    # surely a nicer way to do this exists
+    cp.ID = 0
+    cp.Cap = newSeq[bool](16)
+    cp.Cap[0] = true
+    cp.Cap[1] = true
+    cp.Cap[4] = true
+    cp.Cap[5] = true
+    cp.Cap[15] = true
+    cps.Caps = newSeq[Capability](1)
+    cps.Caps[0] = cp
     for i in byte(0)..byte(31):
       oad[i] = i
     var i: int = 0
@@ -54,10 +67,10 @@ p2pProtocol Bzz(version = bzzVersion,
     ad[1] = uad 
    
     var hsp: Handshake
-    hsp.version = 11
-    hsp.networkid = 4
+    hsp.version = bzzVersion
+    hsp.networkid = networkId
     hsp.ad = ad 
-    hsp.lightnode = false
+    hsp.capabilities = cps
     waitFor sleepAsync(1000)
     #discard await peer.nextMsg(Bzz.hs)
     waitFor peer.hs(hsp)
