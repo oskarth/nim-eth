@@ -4,9 +4,21 @@ import
 const
   bzzVersion = 11
 
+type
+  Handshake = object
+    version: uint
+    networkid: uint
+    ad: seq[seq[byte]]
+    lightnode: bool
+
 p2pProtocol Bzz(version = bzzVersion,
                 rlpxName = "bzz"):
  
+  proc hs(peer: Peer,
+    Payload: Handshake) =
+      echo Payload.version 
+      echo Payload.ad
+
   onPeerConnected do (peer: Peer):
     warn "conn"
     var
@@ -28,20 +40,13 @@ p2pProtocol Bzz(version = bzzVersion,
       i.inc()
     ad[0] = oad 
     ad[1] = uad 
-    
-    #waitFor peer.hs(12, 4, rlp.encode(ad), rlp.encode(cps))
-    waitFor peer.hs(12, 4, ad)
-    waitFor sleepAsync(1000)
+   
+    var hsp: Handshake
+    hsp.version = 11
+    hsp.networkid = 4
+    hsp.ad = ad 
+    hsp.lightnode = true
+    waitFor peer.hs(hsp)
+    discard await peer.nextMsg(Bzz.hs)
+    waitFor sleepAsync(60000)
 
-  proc hs(peer: Peer,
-    version: uint,
-    networkid: uint,
-    ad: seq[seq[byte]])
-    #cp: seq[seq[byte]])
-      # hmmm
-#      var o = newSeq[seq[byte]](4)
-#      o[0] = rlp.encode(version)
-#      o[1] = rlp.encode(networkid)
-#      o[2] = rlp.encode(ad)
-#      o[3] = rlp.encode(cp)
-#      echo rlp.encode(o)
