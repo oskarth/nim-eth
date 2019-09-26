@@ -6,16 +6,15 @@ skipDirs      = @["tests"]
 
 requires "nim >= 0.19.0",
          "nimcrypto",
-         "ranges",
          "stint",
-         "byteutils",
          "secp256k1",
          "rocksdb",
          "chronos",
          "chronicles",
-         "std_shims",
+         "stew",
          "result",
-         "nat_traversal"
+         "nat_traversal",
+         "https://github.com/status-im/nim-metrics"
 
 proc runTest(path: string) =
   echo "\nRunning: ", path
@@ -87,6 +86,25 @@ proc runTrieTests() =
 
 task test_trie, "run trie tests":
   runTrieTests()
+
+proc runWhisperTests() =
+  for filename in [
+    "test_shh",
+    "test_shh_connect"
+  ]:
+    runTest("tests/p2p/" & filename)
+
+task test_whisper, "run whisper and related tests":
+  runWhisperTests()
+
+proc runPssTests() =
+  for filename in [
+     "test_pss"
+    ]:
+    runTest("tests/p2p/" & filename)
+
+task test_pss, "run pss and related tests":
+  runPssTests()
 
 task test, "run tests":
   for filename in [

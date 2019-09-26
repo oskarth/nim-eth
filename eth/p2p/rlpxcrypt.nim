@@ -10,7 +10,7 @@
 
 ## This module implements RLPx cryptography
 
-import ranges/stackarrays, eth/rlp/types, nimcrypto
+import stew/ranges/stackarrays, eth/rlp/types, nimcrypto
 from auth import ConnectionSecret
 
 const
@@ -140,6 +140,13 @@ proc encryptMsg*(msg: openarray[byte], secrets: var SecretState): seq[byte] =
   header[0] = byte((msg.len shr 16) and 0xFF)
   header[1] = byte((msg.len shr 8) and 0xFF)
   header[2] = byte(msg.len and 0xFF)
+
+  # This is the  [capability-id, context-id] in header-data
+  # While not really used, this is checked in the Parity client.
+  # Same as rlp.encode((0, 0))
+  header[3] = 0xc2
+  header[4] = 0x80
+  header[5] = 0x80
 
   # XXX:
   # This would be safer if we use a thread-local sequ for the temporary buffer

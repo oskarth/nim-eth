@@ -9,7 +9,7 @@
 import
   algorithm, bitops, endians, math, options, sequtils, strutils, tables, times,
   secp256k1, chronicles, chronos, eth/common/eth_types, eth/[keys, rlp, async_utils],
-  hashes, byteutils, nimcrypto/[bcmode, hash, keccak, rijndael, sysrand],
+  hashes, stew/byteutils, nimcrypto/[bcmode, hash, keccak, rijndael, sysrand],
   eth/p2p, ../ecies
 
 logScope:
@@ -725,7 +725,7 @@ proc initProtocolState*(network: WhisperNetwork, node: EthereumNode) {.gcsafe.} 
   asyncCheck node.run(network)
 
 p2pProtocol Whisper(version = whisperVersion,
-                    shortName = "shh",
+                    rlpxName = "shh",
                     peerState = WhisperPeer,
                     networkState = WhisperNetwork):
 

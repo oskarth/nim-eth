@@ -1,4 +1,4 @@
-import os, rocksdb, ranges, eth/trie/[trie_defs, db_tracing]
+import os, rocksdb, stew/ranges, eth/trie/[trie_defs, db_tracing]
 import backend_defs
 
 type
@@ -6,6 +6,10 @@ type
     store: RocksDBInstance
 
   ChainDB* = RocksChainDB
+
+# Maximum open files for rocksdb, set to 512 to be safe for usual 1024 Linux
+# limit per application
+const maxOpenFiles = 512
 
 proc get*(db: ChainDB, key: openarray[byte]): seq[byte] =
   let s = db.store.getBytes(key)
@@ -44,7 +48,8 @@ proc newChainDB*(basePath: string, readOnly = false): ChainDB =
   createDir(dataDir)
   createDir(backupsDir)
 
-  let s = result.store.init(dataDir, backupsDir, readOnly)
+  let s = result.store.init(dataDir, backupsDir, readOnly,
+                            maxOpenFiles = maxOpenFiles)
   if not s.ok: raiseStorageInitError()
 
   if not readOnly:

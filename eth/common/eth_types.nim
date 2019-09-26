@@ -168,9 +168,6 @@ type
     OK
     Error
 
-  NimbusStats* = object
-    num_peers*: int
-
 when BlockNumber is int64:
   ## The goal of these templates is to make it easier to switch
   ## the block number type to a different representation
@@ -183,6 +180,12 @@ when BlockNumber is int64:
   template toBlockNumber*(n: SomeInteger): BlockNumber =
     int64(n)
 
+  template toBlockNumber*(n: UInt256): BlockNumber =
+    n.toInt
+
+  template toInt*(n: BlockNumber): int =
+    int(n)
+
 else:
   template vmWordToBlockNumber*(word: VMWord): BlockNumber =
     word
@@ -192,6 +195,12 @@ else:
 
   template toBlockNumber*(n: SomeInteger): BlockNumber =
     u256(n)
+
+  template toBlockNumber*(n: UInt256): BlockNumber =
+    n
+
+  template u256*(n: BlockNumber): UInt256 =
+    n
 
 proc toBlockNonce*(n: uint64): BlockNonce =
   bigEndian64(addr result[0], unsafeAddr n)
@@ -306,7 +315,7 @@ proc read*(rlp: var Rlp, T: typedesc[HashOrNum]): T =
   if rlp.blobLen == 32:
     result = HashOrNum(isHash: true, hash: rlp.read(Hash256))
   else:
-    result = HashOrNum(isHash: false, number: rlp.read(UInt256))
+    result = HashOrNum(isHash: false, number: rlp.read(BlockNumber))
 
 proc append*(rlpWriter: var RlpWriter, t: Time) {.inline.} =
   rlpWriter.append(t.toUnix())
@@ -345,7 +354,10 @@ proc getBlockHeader*(db: AbstractChainDB, b: BlockNumber): BlockHeaderRef {.gcsa
 method getBestBlockHeader*(self: AbstractChainDB): BlockHeader {.base, gcsafe.} =
   notImplemented()
 
-method getSuccessorHeader*(db: AbstractChainDB, h: BlockHeader, output: var BlockHeader): bool {.base, gcsafe.} =
+method getSuccessorHeader*(db: AbstractChainDB, h: BlockHeader, output: var BlockHeader, skip = 0'u): bool {.base, gcsafe.} =
+  notImplemented()
+
+method getAncestorHeader*(db: AbstractChainDB, h: BlockHeader, output: var BlockHeader, skip = 0'u): bool {.base, gcsafe.} =
   notImplemented()
 
 method getBlockBody*(db: AbstractChainDB, blockHash: KeccakHash): BlockBodyRef {.base, gcsafe.} =
