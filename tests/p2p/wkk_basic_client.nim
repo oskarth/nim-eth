@@ -10,7 +10,7 @@
 import
   sequtils, options, strutils, parseopt, chronos,
   eth/[keys, rlp, p2p], eth/p2p/rlpx_protocols/[waku_protocol],
-  eth/p2p/[discovery, enode, peer_pool, bootnodes, whispernodes]
+  eth/p2p/[discovery, enode, peer_pool, bootnodes, wakunodes]
 
 const
   DefaultListeningPort = 30303
@@ -27,14 +27,14 @@ Options:
   DockerBootnode = "enode://f41f87f084ed7df4a9fd0833e395f49c89764462d3c4bc16d061a3ae5e3e34b79eb47d61c2f62db95ff32ae8e20965e25a3c9d9b8dbccaa8e8d77ac6fc8efc06@172.17.0.2:30301"
 
 type
-  WakuConfig* = object
+  WkkConfig* = object
     listeningPort*: int
     post*: bool
     watch*: bool
     main*: bool
     local*: bool
 
-proc processArguments*(): WakuConfig =
+proc processArguments*(): WkkConfig =
   var opt = initOptParser()
   var length = 0
   for kind, key, value in opt.getopt():
@@ -101,9 +101,8 @@ if config.main:
     bootnodes.add(bootnode)
 
   asyncCheck node.connectToNetwork(bootnodes, true, true)
-  # main network has mostly non WAKU nodes, so we connect directly to WAKU nodes
-  # XXX: Assume wakunodes as whispernodes, this is false
-  for nodeId in WhisperNodes:
+  # main network has mostly non WKK nodes, so we connect directly to WKK nodes
+  for nodeId in WakuNodes:
     var wakuENode: ENode
     discard initENode(nodeId, wakuENode)
     var wakuNode = newNode(wakuENode)
