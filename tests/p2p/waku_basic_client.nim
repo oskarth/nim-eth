@@ -9,7 +9,7 @@
 
 import
   sequtils, options, strutils, parseopt, chronos,
-  eth/[keys, rlp, p2p], eth/p2p/rlpx_protocols/[whisper_protocol],
+  eth/[keys, rlp, p2p], eth/p2p/rlpx_protocols/[waku_protocol],
   eth/p2p/[discovery, enode, peer_pool, bootnodes, whispernodes]
 
 const
@@ -27,14 +27,14 @@ Options:
   DockerBootnode = "enode://f41f87f084ed7df4a9fd0833e395f49c89764462d3c4bc16d061a3ae5e3e34b79eb47d61c2f62db95ff32ae8e20965e25a3c9d9b8dbccaa8e8d77ac6fc8efc06@172.17.0.2:30301"
 
 type
-  ShhConfig* = object
+  WakuConfig* = object
     listeningPort*: int
     post*: bool
     watch*: bool
     main*: bool
     local*: bool
 
-proc processArguments*(): ShhConfig =
+proc processArguments*(): WakuConfig =
   var opt = initOptParser()
   var length = 0
   for kind, key, value in opt.getopt():
@@ -81,7 +81,7 @@ else:
 
 let keypair = newKeyPair()
 var node = newEthereumNode(keypair, address, netId, nil, addAllCapabilities = false)
-node.addCapability Whisper
+node.addCapability Waku
 
 # lets prepare some prearranged keypairs
 let encPrivateKey = initPrivateKey("5dc5381cae54ba3174dc0d46040fe11614d0cc94d41185922585198b4fcef9d3")
@@ -101,12 +101,13 @@ if config.main:
     bootnodes.add(bootnode)
 
   asyncCheck node.connectToNetwork(bootnodes, true, true)
-  # main network has mostly non SHH nodes, so we connect directly to SHH nodes
+  # main network has mostly non WAKU nodes, so we connect directly to WAKU nodes
+  # XXX: Assume wakunodes as whispernodes, this is false
   for nodeId in WhisperNodes:
-    var whisperENode: ENode
-    discard initENode(nodeId, whisperENode)
-    var whisperNode = newNode(whisperENode)
-    asyncCheck node.peerPool.connectToNode(whisperNode)
+    var wakuENode: ENode
+    discard initENode(nodeId, wakuENode)
+    var wakuNode = newNode(wakuENode)
+    asyncCheck node.peerPool.connectToNode(wakuNode)
 else:
   var bootENode: ENode
   discard initENode(DockerBootNode, bootENode)
