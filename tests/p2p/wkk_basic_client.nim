@@ -9,8 +9,16 @@
 
 import
   sequtils, options, strutils, parseopt, chronos,
-  eth/[keys, rlp, p2p], eth/p2p/rlpx_protocols/[waku_protocol],
-  eth/p2p/[discovery, enode, peer_pool, bootnodes, wakunodes]
+  eth/[keys, rlp, p2p], eth/p2p/rlpx_protocols/waku_protocol,
+  eth/p2p/[discovery, enode, peer_pool, bootnodes, whispernodes]
+
+from eth/p2p/rlpx_protocols/whisper_protocol import Whisper
+
+# TODO: To start with, listen to all whisper nodes
+# `nim c -o:wkk_client tests/p2p/wkk_basic_client.nim` and
+# `./wkk_client --mainnet` should show Whisper peers too
+
+# TODO: Then, redirect traffic
 
 const
   DefaultListeningPort = 30303
@@ -83,6 +91,14 @@ let keypair = newKeyPair()
 var node = newEthereumNode(keypair, address, netId, nil, addAllCapabilities = false)
 node.addCapability Waku
 
+# XXX: Wy can't we add more capabilities?
+#/home/oskarth/git/nim-eth/eth/p2p.nim(32, 31) Error: type mismatch: got <type Whisper>
+#but expected one of:
+#      template protocolInfo(P: type Waku): auto
+#               template protocolInfo(P: type devp2p): auto
+# TODO: Fix this to allow more capabilities
+node.addCapability Whisper
+
 # lets prepare some prearranged keypairs
 let encPrivateKey = initPrivateKey("5dc5381cae54ba3174dc0d46040fe11614d0cc94d41185922585198b4fcef9d3")
 let encPublicKey = encPrivateKey.getPublicKey()
@@ -102,7 +118,8 @@ if config.main:
 
   asyncCheck node.connectToNetwork(bootnodes, true, true)
   # main network has mostly non WKK nodes, so we connect directly to WKK nodes
-  for nodeId in WakuNodes:
+  # XXX: To start with, listen to Whisper nodes
+  for nodeId in WhisperNodes:
     var wakuENode: ENode
     discard initENode(nodeId, wakuENode)
     var wakuNode = newNode(wakuENode)
