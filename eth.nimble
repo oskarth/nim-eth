@@ -101,3 +101,7 @@ task test, "run tests":
   runRlpTests()
   runTrieTests()
 
+# XXX: Delete me, temp task for testing
+task test_waku, "run waku tests":
+  runTest("tests/p2p/test_waku")
+  runTest("tests/p2p/test_waku_connect")
