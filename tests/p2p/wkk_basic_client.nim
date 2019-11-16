@@ -9,10 +9,11 @@
 
 import
   sequtils, options, strutils, parseopt, chronos,
-  eth/[keys, rlp, p2p], eth/p2p/rlpx_protocols/waku_protocol,
+  eth/[keys, rlp, p2p],
   eth/p2p/[discovery, enode, peer_pool, bootnodes, whispernodes]
 
-from eth/p2p/rlpx_protocols/whisper_protocol import Whisper
+import eth/p2p/rlpx_protocols/waku_protocol as waku
+import eth/p2p/rlpx_protocols/whisper_protocol as whisper
 
 # TODO: To start with, listen to all whisper nodes
 # `nim c -o:wkk_client tests/p2p/wkk_basic_client.nim` and
@@ -89,14 +90,8 @@ else:
 
 let keypair = newKeyPair()
 var node = newEthereumNode(keypair, address, netId, nil, addAllCapabilities = false)
-node.addCapability Waku
 
-# XXX: Wy can't we add more capabilities?
-#/home/oskarth/git/nim-eth/eth/p2p.nim(32, 31) Error: type mismatch: got <type Whisper>
-#but expected one of:
-#      template protocolInfo(P: type Waku): auto
-#               template protocolInfo(P: type devp2p): auto
-# TODO: Fix this to allow more capabilities
+node.addCapability Waku
 node.addCapability Whisper
 
 # lets prepare some prearranged keypairs
@@ -104,7 +99,7 @@ let encPrivateKey = initPrivateKey("5dc5381cae54ba3174dc0d46040fe11614d0cc94d411
 let encPublicKey = encPrivateKey.getPublicKey()
 let signPrivateKey = initPrivateKey("365bda0757d22212b04fada4b9222f8c3da59b49398fa04cf612481cd893b0a3")
 let signPublicKey = signPrivateKey.getPublicKey()
-var symKey: SymKey
+var symKey: waku.SymKey
 # To test with geth: all 0's key is invalid in geth console
 symKey[31] = 1
 let topic = [byte 0x12, 0, 0, 0]
@@ -129,44 +124,51 @@ else:
   discard initENode(DockerBootNode, bootENode)
   waitFor node.connectToNetwork(@[bootENode], true, true)
 
+# XXX: using Whisper for now
+
 if config.watch:
-  proc handler(msg: ReceivedMessage) =
+  # XXX: Is this only called for Whisper envelopes?
+  proc handler(msg: whisper.ReceivedMessage) =
     echo msg.decoded.payload.repr
 
   # filter encrypted asym
-  discard node.subscribeFilter(newFilter(privateKey = some(encPrivateKey),
+  discard node.subscribeFilter(whisper.newFilter(privateKey = some(encPrivateKey),
                                          topics = @[topic]),
                                handler)
   # filter encrypted asym + signed
-  discard node.subscribeFilter(newFilter(some(signPublicKey),
+  discard node.subscribeFilter(whisper.newFilter(some(signPublicKey),
                                          privateKey = some(encPrivateKey),
                                          topics = @[topic]),
                                handler)
   # filter encrypted sym
-  discard node.subscribeFilter(newFilter(symKey = some(symKey),
+  discard node.subscribeFilter(whisper.newFilter(symKey = some(symKey),
                                          topics = @[topic]),
                                handler)
   # filter encrypted sym + signed
-  discard node.subscribeFilter(newFilter(some(signPublicKey),
+  discard node.subscribeFilter(whisper.newFilter(some(signPublicKey),
                                          symKey = some(symKey),
                                          topics = @[topic]),
                                handler)
 
+# XXX: Using whisper for now
+
 if config.post:
   # encrypted asym
-  discard node.postMessage(some(encPublicKey), ttl = 5, topic = topic,
+
+  # XXX: is node.postMessage(...) definitely same as postMessage(node, ...)?
+  discard whisper.postMessage(node, some(encPublicKey), ttl = 5, topic = topic,
                            payload = repeat(byte 65, 10))
   poll()
-  # # encrypted asym + signed
-  discard node.postMessage(some(encPublicKey), src = some(signPrivateKey),
+#   # # encrypted asym + signed
+  discard whisper.postMessage(node, some(encPublicKey), src = some(signPrivateKey),
                            ttl = 5, topic = topic, payload = repeat(byte 66, 10))
   poll()
   # # encrypted sym
-  discard node.postMessage(symKey = some(symKey), ttl = 5, topic = topic,
+  discard whisper.postMessage(node, symKey = some(symKey), ttl = 5, topic = topic,
                            payload = repeat(byte 67, 10))
   poll()
   # # encrypted sym + signed
-  discard node.postMessage(symKey = some(symKey), src = some(signPrivateKey),
+  discard whisper.postMessage(node, symKey = some(symKey), src = some(signPrivateKey),
                            ttl = 5, topic = topic, payload = repeat(byte 68, 10))
 
 while true:
