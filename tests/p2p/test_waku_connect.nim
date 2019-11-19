@@ -370,9 +370,11 @@ suite "Waku connections":
 
       await allFutures(futures).withTimeout(waitInterval)
 
-      # This shows WakuWhisper can receive Whisper messages
-      # TODO: This should also make its way to Waku state! Where?
-      nodeWakuWhisper.protocolState(Whisper).queue.items.len == 2
+      # TODO: Now on wakuQueue, but we want it in Waku state
+      nodeWakuWhisper.protocolState(Whisper).wakuQueue.items.len == 2
+
+      # Get this to pass
+      #nodeWakuWhisper.protocolState(Waku).wakuQueue.items.len == 2
 
       # XXX: How does this look with protocol state for waku and whisper?
       whisper.unsubscribeFilter(nodeWakuWhisper, filter1) == true

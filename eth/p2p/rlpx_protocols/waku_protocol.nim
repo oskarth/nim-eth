@@ -1101,3 +1101,9 @@ proc resetMessageQueue*(node: EthereumNode) =
   ##
   ## NOTE: Not something that should be run in normal circumstances.
   node.protocolState(Waku).queue = initQueue(defaultQueueCapacity)
+
+# For Waku Whisper bridging
+# XXX: Not used right now
+proc queueWhisperMessage*(node: EthereumNode, msg: Message): bool {.gcsafe.} =
+  return queueMessage(node, msg)
+  #discard queueMessage(node, msg)

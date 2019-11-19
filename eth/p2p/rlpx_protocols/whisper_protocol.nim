@@ -38,6 +38,8 @@ import
   nimcrypto/[bcmode, hash, keccak, rijndael, sysrand],
   eth/common/eth_types, eth/[keys, rlp, async_utils, p2p], eth/p2p/ecies
 
+import eth/p2p/rlpx_protocols/waku_protocol as waku
+
 logScope:
   topics = "whisper"
 
@@ -731,12 +733,14 @@ type
     queue*: Queue
     filters*: Filters
     config*: WhisperConfig
+    wakuQueue*: Queue
 
 proc run(peer: Peer) {.gcsafe, async.}
 proc run(node: EthereumNode, network: WhisperNetwork) {.gcsafe, async.}
 
 proc initProtocolState*(network: WhisperNetwork, node: EthereumNode) {.gcsafe.} =
   network.queue = initQueue(defaultQueueCapacity)
+  network.wakuQueue = initQueue(defaultQueueCapacity)
   network.filters = initTable[string, Filter]()
   network.config.bloom = fullBloom()
   network.config.powRequirement = defaultMinPow
@@ -834,6 +838,10 @@ p2pProtocol Whisper(version = whisperVersion,
       # This can still be a duplicate message, but from another peer than
       # the peer who send the message.
       if peer.networkState.queue.add(msg):
+
+        if peer.networkState.wakuQueue.add(msg):
+          echo("Put message on wakuQueue")
+
         # notify filters of this message
         peer.networkState.filters.notify(msg)
 
@@ -910,6 +918,7 @@ proc processQueue(peer: Peer) =
   # gets dropped
   traceAsyncErrors peer.messages(envelopes)
 
+# TODO: MovewakuQueue to Waku protocol state somehow
 proc run(peer: Peer) {.async.} =
   while peer.connectionState notin {Disconnecting, Disconnected}:
     peer.processQueue()
