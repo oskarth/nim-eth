@@ -16,8 +16,8 @@ import eth/p2p/rlpx_protocols/waku_protocol as waku
 import eth/p2p/rlpx_protocols/whisper_protocol as whisper
 
 # TODO: To start with, listen to all whisper nodes
-# `nim c -o:wkk_client tests/p2p/wkk_basic_client.nim` and
-# `./wkk_client --mainnet` should show Whisper peers too
+# `nim c -o:waku_client tests/p2p/waku_basic_client.nim` and
+# `./waku_client --mainnet` should show Whisper peers too
 
 # TODO: Then, redirect traffic
 
@@ -36,14 +36,14 @@ Options:
   DockerBootnode = "enode://f41f87f084ed7df4a9fd0833e395f49c89764462d3c4bc16d061a3ae5e3e34b79eb47d61c2f62db95ff32ae8e20965e25a3c9d9b8dbccaa8e8d77ac6fc8efc06@172.17.0.2:30301"
 
 type
-  WkkConfig* = object
+  WakuConfig* = object
     listeningPort*: int
     post*: bool
     watch*: bool
     main*: bool
     local*: bool
 
-proc processArguments*(): WkkConfig =
+proc processArguments*(): WakuConfig =
   var opt = initOptParser()
   var length = 0
   for kind, key, value in opt.getopt():
@@ -112,7 +112,7 @@ if config.main:
     bootnodes.add(bootnode)
 
   asyncCheck node.connectToNetwork(bootnodes, true, true)
-  # main network has mostly non WKK nodes, so we connect directly to WKK nodes
+  # main network has mostly non WAKU nodes, so we connect directly to WAKU nodes
   # XXX: To start with, listen to Whisper nodes
   for nodeId in WhisperNodes:
     var wakuENode: ENode
